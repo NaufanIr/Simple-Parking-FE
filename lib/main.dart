@@ -51,7 +51,7 @@ class NavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget?> screens = [HomePage(), null, ProfilePage(userID!)];
+    List<Widget?> screens = [HomePage(userID!), null, ProfilePage(userID!)];
     return Obx(
       () => Scaffold(
         body: screens.elementAt(selectedIndex.value),

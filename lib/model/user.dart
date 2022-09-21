@@ -19,33 +19,36 @@ class LoginResponse {
 }
 
 class User {
-  String id;
-  String? idParkir;
-  String nama;
-  String noTelp;
-  String email;
-  String password;
-  String saldo;
+  String? id;
+  String? nama;
+  String? noTelp;
+  String? email;
+  String? password;
+  String? saldo;
+  String? jmlMobil = "0";
+  String? jmlMotor = "0";
 
   User({
     required this.id,
-    required this.idParkir,
     required this.nama,
-    required this.noTelp,
-    required this.email,
-    required this.password,
-    required this.saldo,
+    this.noTelp,
+    this.email,
+    this.password,
+    this.saldo,
+    this.jmlMobil,
+    this.jmlMotor,
   });
-  
+
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json["id"],
-      idParkir: json["id_parkir"],
       nama: json["nama"],
       noTelp: json["no_telp"],
       email: json["email"],
       password: json["password"],
       saldo: json["saldo"],
+      jmlMobil: json["jml_mobil"],
+      jmlMotor: json["jml_motor"],
     );
   }
 }

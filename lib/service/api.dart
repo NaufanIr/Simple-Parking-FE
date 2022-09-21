@@ -3,6 +3,7 @@ class Api {
 
   static var login = "${baseUrl}login.php";
   static var signup = "${baseUrl}signup.php";
+  static var getHomeInfo = "${baseUrl}getHomeInfo.php";
   static var addVehicle = "${baseUrl}addVehicle.php";
   static var topup = "${baseUrl}topup.php";
   static var editProfile = "${baseUrl}editUser.php";

@@ -3,7 +3,6 @@ import 'package:simple_parking_app/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_parking_app/model/vehicle.dart';
 import 'package:simple_parking_app/service/api.dart';
-
 import '../model/response.dart';
 
 abstract class ApiServices {
@@ -171,6 +170,26 @@ abstract class ApiServices {
             result: [],
           );
         }
+      } else {
+        throw Exception('404 not found');
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  static Future<Response<User?>> getHomeInfo(String userID) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${Api.getHomeInfo}?id_user=$userID'),
+      );
+      if (response.statusCode == 200) {
+        var responseData = json.decode(response.body);
+        return Response(
+          error: responseData['error'],
+          message: responseData['message'],
+          result: User.fromJson(responseData['result']),
+        );
       } else {
         throw Exception('404 not found');
       }

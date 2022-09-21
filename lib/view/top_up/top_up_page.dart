@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:simple_parking_app/main.dart';
 import 'package:simple_parking_app/service/api_service.dart';
 import 'package:simple_parking_app/utils/colors_theme.dart';
+import 'package:simple_parking_app/utils/number_formater.dart';
 import 'package:simple_parking_app/utils/widgets/text_widgets.dart';
 
 class TopUpPage extends StatefulWidget {
@@ -107,7 +108,7 @@ class _TopUpPageState extends State<TopUpPage> {
                   border: InputBorder.none,
                 ),
                 onChanged: (val) {
-                  val = _formatNumber(val.replaceAll('.', ''));
+                  val = NumberFormater.toIDR(val.replaceAll('.', ''));
                   _tfNominal.value = TextEditingValue(
                     text: val,
                     selection: TextSelection.collapsed(offset: val.length),
@@ -162,7 +163,6 @@ class _TopUpPageState extends State<TopUpPage> {
   }
 
   void topUp() async {
-    //int nominal = int.parse(_tfNominal.text.replaceAll(".", ""));
     await ApiServices.topUp(
       userID: userID!,
       nominal: _tfNominal.text.replaceAll(".", ""),
@@ -172,10 +172,6 @@ class _TopUpPageState extends State<TopUpPage> {
         Get.snackbar("Berhasil", "Berhasil melakukan top up saldo");
       },
     );
-  }
-
-  String _formatNumber(String s) {
-    return NumberFormat.decimalPattern('id').format(int.parse(s));
   }
 
   GestureDetector choiceSaldo(BuildContext context, int index) {

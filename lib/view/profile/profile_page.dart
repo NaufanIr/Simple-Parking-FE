@@ -53,10 +53,10 @@ class ProfilePage extends StatelessWidget {
           if (snapshot.data == null) {
             return LoadingScreen();
           } else {
-            _tfName.text = snapshot.data!.nama;
-            _tfEmail.text = snapshot.data!.email;
-            _tfPhoneNumber.text = snapshot.data!.noTelp;
-            _tfPassword.text = snapshot.data!.password;
+            _tfName.text = snapshot.data!.nama!;
+            _tfEmail.text = snapshot.data!.email!;
+            _tfPhoneNumber.text = snapshot.data!.noTelp!;
+            _tfPassword.text = snapshot.data!.password!;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -166,21 +166,3 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
-
-// FutureBuilder<String?>(
-      //   future: DataPref.getUserId(),
-      //   builder: (context, value) {
-      //     if (value.connectionState == ConnectionState.waiting) {
-      //       return LoadingScreen();
-      //     } else {
-      //       userID = value.data;
-      //       if (userID == null) {
-      //         return Center(
-      //           child: Text("Error 404"),
-      //         );
-      //       } else {
-      //         return
-      //       }
-      //     }
-      //   },
-      // ),
