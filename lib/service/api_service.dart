@@ -216,4 +216,25 @@ abstract class ApiServices {
       throw Exception(e.toString());
     }
   }
+
+  static Future<Response> payParking({
+    required String parkingID,
+    required String userID,
+    required String cost,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse(Api.payParking),
+        body: {'id': parkingID, 'id_user': userID, 'cost': cost},
+      );
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        return Response.fromJson(data);
+      } else {
+        throw Exception('404 not found');
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

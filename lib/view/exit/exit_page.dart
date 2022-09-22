@@ -1,4 +1,4 @@
-// ignore_for_file: non_constant_identifier_names, prefer_const_declarations, use_key_in_widget_constructors, prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, must_be_immutable
+// ignore_for_file: non_constant_identifier_names, prefer_const_declarations, use_key_in_widget_constructors, prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, must_be_immutable, sort_child_properties_last
 
 import 'package:flutter/material.dart';
 import 'package:get/get_rx/get_rx.dart';
@@ -16,15 +16,15 @@ import 'package:simple_parking_app/utils/widgets/text_widgets.dart';
 class ExitPage extends StatelessWidget {
   static final String TAG = '/ExitPage';
 
-  var userID = Get.parameters['userID'];
+  final _userID = Get.parameters['userID'];
 
-  var isPaid = false.obs;
-  var isLoading = false.obs;
+  final _isLoading = false.obs;
+  final _isPaid = Rxn<bool>();
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Response<Parking?>>(
-      future: ApiServices.getParkir(userID!),
+      future: ApiServices.getParkir(_userID!),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
@@ -71,6 +71,23 @@ class ExitPage extends StatelessWidget {
             var data = snapshot.data!.result!;
             var kendaraan = data.kendaraan;
             var tempat = data.tempat;
+
+            _isPaid.value = data.status == "M" ? false : true;
+
+            var tarif =
+                kendaraan.jenis == "B" ? tempat.tarifMobil : tempat.tarifMotor;
+
+            var durasi = data.waktuBayar == null
+                ? Formater.timeDifference(data.waktuMasuk)
+                : Formater.timeDifference(data.waktuMasuk, w2: data.waktuBayar);
+
+            var cost = parkingCost(
+              cost: kendaraan.jenis == 'B'
+                  ? tempat.tarifMobil
+                  : tempat.tarifMotor,
+              duration: Formater.timeDiffInHours(data.waktuMasuk),
+            );
+
             return Scaffold(
               backgroundColor: Colors.white,
               appBar: AppBar(
@@ -101,7 +118,7 @@ class ExitPage extends StatelessWidget {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isPaid.value
+                            color: _isPaid.value!
                                 ? Colors.green
                                 : ColorsTheme.myLightOrange,
                             width: 2,
@@ -114,18 +131,18 @@ class ExitPage extends StatelessWidget {
                               "STATUS",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isPaid.value
+                                color: _isPaid.value!
                                     ? Colors.green
                                     : ColorsTheme.myLightOrange,
                               ),
                             ),
                             Text(
-                              isPaid.value
+                              _isPaid.value!
                                   ? "Telah Dibayar"
                                   : "Menunggu Pembayaran",
                               style: TextStyle(
                                 fontSize: 16,
-                                color: isPaid.value
+                                color: _isPaid.value!
                                     ? Colors.green
                                     : ColorsTheme.myLightOrange,
                               ),
@@ -220,13 +237,10 @@ class ExitPage extends StatelessWidget {
                         children: [
                           infoField(
                             title: "Tarif Parkir",
-                            info:
-                                "Rp ${kendaraan.jenis == "B" ? tempat.tarifMobil : tempat.tarifMotor}/Jam",
+                            info: "Rp ${Formater.toIDR(tarif)}/Jam",
                           ),
-                          infoField(
-                            title: "Durasi Parkir",
-                            info: Formater.timeDifference(data.waktuMasuk),
-                          ),
+
+                          infoField(title: "Durasi Parkir", info: durasi),
 
                           Divider(thickness: 2, height: 44),
 
@@ -243,13 +257,9 @@ class ExitPage extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                parkingCost(
-                                  cost: kendaraan.jenis == 'B'
-                                      ? tempat.tarifMobil
-                                      : tempat.tarifMotor,
-                                  duration:
-                                      Formater.timeDiffInHours(data.waktuMasuk),
-                                ),
+                                data.biaya == null
+                                    ? "Rp ${Formater.toIDR(cost)}"
+                                    : "Rp ${Formater.toIDR(data.biaya!)}",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -278,7 +288,7 @@ class ExitPage extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        isLoading.value
+                        _isLoading.value
                             ? Container(
                                 margin: const EdgeInsets.only(right: 16),
                                 height: 20,
@@ -290,8 +300,8 @@ class ExitPage extends StatelessWidget {
                             : SizedBox(),
                         Text(
                           buttonState(
-                            isPaid.value,
-                            isLoading.value,
+                            _isPaid.value!,
+                            _isLoading.value,
                           ), //isPaid.value ? "KELUAR PARKIR" : "BAYAR",
                           style: TextStyle(
                             fontSize: 18,
@@ -301,18 +311,9 @@ class ExitPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    onPressed: () async {
-                      if (!isPaid.value) {
-                        isLoading.value = !isLoading.value;
-                        await Future.delayed(Duration(seconds: 2));
-                        isLoading.value = !isLoading.value;
-                        isPaid.value = !isPaid.value;
-                      }
-                      //showErrorMessage(context);
-                      isPaid.value
-                          ? showExitQRCode(context, data.id)
-                          : showErrorMessage(context);
-                    },
+                    onPressed: _isLoading.value
+                        ? null
+                        : () async => payParking(context, data, cost),
                   ),
                 ),
               ),
@@ -325,45 +326,33 @@ class ExitPage extends StatelessWidget {
     );
   }
 
-  String parkingCost({required String cost, required String duration}) {
-    var parkingCost = int.parse(cost) * int.parse(duration);
-    return "Rp ${Formater.toIDR(parkingCost.toString())}";
-  }
-
-  Padding infoField({required String title, required String info}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            "$title:",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: ColorsTheme.myDarkBlue,
-            ),
-          ),
-          Text(
-            info,
-            style: TextStyle(
-              fontSize: 15,
-              color: ColorsTheme.myDarkBlue,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String buttonState(bool isPaid, bool isLoading) {
-    if (!isPaid) {
-      if (isLoading) {
-        return "MEMPROSES...";
-      }
-      return "BAYAR PARKIR";
+  Future<void> payParking(
+    BuildContext context,
+    Parking data,
+    String cost,
+  ) async {
+    _isLoading.value = !_isLoading.value;
+    if (data.status == "M") {
+      await ApiServices.payParking(
+        parkingID: data.id,
+        userID: data.idUser,
+        cost: cost,
+      ).then(
+        (value) {
+          if (value.error) {
+            _isLoading.value = !_isLoading.value;
+            showErrorMessage(context);
+          } else {
+            _isPaid.value = true;
+            _isLoading.value = !_isLoading.value;
+            showExitQRCode(context, data.id);
+          }
+        },
+      );
+    } else {
+      _isLoading.value = !_isLoading.value;
+      showExitQRCode(context, data.id);
     }
-    return "KELUAR PARKIR";
   }
 
   Future<dynamic> showErrorMessage(BuildContext context) {
@@ -466,5 +455,46 @@ class ExitPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  String parkingCost({required String cost, required String duration}) {
+    var parkingCost = int.parse(cost) * int.parse(duration);
+    return parkingCost.toString();
+  }
+
+  Padding infoField({required String title, required String info}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "$title:",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: ColorsTheme.myDarkBlue,
+            ),
+          ),
+          Text(
+            info,
+            style: TextStyle(
+              fontSize: 15,
+              color: ColorsTheme.myDarkBlue,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String buttonState(bool isPaid, bool isLoading) {
+    if (!isPaid) {
+      if (isLoading) {
+        return "MEMPROSES...";
+      }
+      return "BAYAR PARKIR";
+    }
+    return "KELUAR PARKIR";
   }
 }
