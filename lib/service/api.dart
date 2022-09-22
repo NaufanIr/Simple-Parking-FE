@@ -9,4 +9,5 @@ class Api {
   static var editProfile = "${baseUrl}editUser.php";
   static var showAllVehicle = "${baseUrl}getUserVehicle.php";
   static var getUserData = "${baseUrl}getUser.php";
+  static var getParkir = "${baseUrl}getParkir.php";
 }

@@ -1,14 +1,29 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_key_in_widget_constructors
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_key_in_widget_constructors, must_be_immutable
 
 import 'package:flutter/material.dart';
 import 'package:simple_parking_app/utils/colors_theme.dart';
+import 'package:simple_parking_app/utils/formater.dart';
 
 class CardParkingActivity extends StatelessWidget {
+  final String placeName;
+  final String vehicleType;
+  final String vehicleModel;
+  final String policeNumber;
+  final String dateTime;
+  final String? city;
+  final String? vehicleBrand;
+  final VoidCallback? onTap;
+
   const CardParkingActivity({
+    required this.placeName,
+    required this.vehicleType,
+    required this.vehicleModel,
+    required this.policeNumber,
+    required this.dateTime,
+    this.city = "",
+    this.vehicleBrand = "",
     this.onTap,
   });
-
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -35,21 +50,20 @@ class CardParkingActivity extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      ColorsTheme.myLightOrange,
-                      ColorsTheme.myOrange
-                    ],
+                    colors: [ColorsTheme.myLightOrange, ColorsTheme.myOrange],
                   ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    //TITLE
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        //NAMA TEMPAT PARKIR
                         Text(
-                          "AXC Summarecon Bekasi",
+                          "$placeName $city",
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -58,8 +72,10 @@ class CardParkingActivity extends StatelessWidget {
                             color: Colors.white,
                           ),
                         ),
+
+                        //INFO KENDARAAN
                         Text(
-                          "Mobil • Mitsubishi Xpander • B 2001 KKH",
+                          "${vehicleType == "B" ? "Mobil" : "Sepeda Motor"} • $vehicleBrand $vehicleModel • $policeNumber",
                           style: TextStyle(
                             color: Colors.white,
                             height: 1.75,
@@ -68,24 +84,29 @@ class CardParkingActivity extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 8),
+
+                    //DATE TIME
                     Row(
                       children: [
                         Icon(Icons.calendar_month_outlined),
                         SizedBox(width: 8),
                         Text(
-                          "Wed, 3 Aug 2022 • 11.30",
+                          Formater.dateTime(dateTime),
                           style: TextStyle(
                             color: Colors.white,
                           ),
                         ),
                       ],
                     ),
+
+                    //DURASI
                     Row(
                       children: [
                         Icon(Icons.timelapse_outlined),
                         SizedBox(width: 8),
                         Text(
-                          "5 Jam 10 Menit",
+                          Formater.timeDifference(dateTime),
+                          // "5 Jam 10 Menit",
                           style: TextStyle(
                             color: Colors.white,
                           ),
@@ -95,25 +116,23 @@ class CardParkingActivity extends StatelessWidget {
                   ],
                 ),
               ),
+
+              //TOTAL BIAYA PARKIR
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Total Biaya Parkir",
+                      "Bayar & Keluar Parkir",
                       style: TextStyle(
                         fontSize: 16,
                         color: ColorsTheme.myLightOrange,
                       ),
                     ),
-                    Text(
-                      "Rp 20.000",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: ColorsTheme.myLightOrange,
-                      ),
+                    Icon(
+                      Icons.keyboard_arrow_right_rounded,
+                      color: ColorsTheme.myLightOrange,
                     ),
                   ],
                 ),

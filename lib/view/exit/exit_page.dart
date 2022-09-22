@@ -1,228 +1,358 @@
 // ignore_for_file: non_constant_identifier_names, prefer_const_declarations, use_key_in_widget_constructors, prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, must_be_immutable
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get_rx/get_rx.dart';
+import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:get/route_manager.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:simple_parking_app/model/parking.dart';
+import 'package:simple_parking_app/model/response.dart';
+import 'package:simple_parking_app/service/api_service.dart';
 import 'package:simple_parking_app/utils/colors_theme.dart';
+import 'package:simple_parking_app/utils/formater.dart';
+import 'package:simple_parking_app/utils/widgets/loading_screen.dart';
 import 'package:simple_parking_app/utils/widgets/text_widgets.dart';
-import 'package:simple_parking_app/view/home/parking_act_widget.dart';
 
 class ExitPage extends StatelessWidget {
   static final String TAG = '/ExitPage';
+
+  var userID = Get.parameters['userID'];
 
   var isPaid = false.obs;
   var isLoading = false.obs;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: BackButton(
-          color: ColorsTheme.myDarkBlue,
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "KELUAR PARKIR",
-          style: TextStyle(
-            color: Color(0xff06113D),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            //STATUS PEMBAYARAN
-            Obx(
-              () => Container(
-                padding: EdgeInsets.all(16),
-                width: double.maxFinite,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color:
-                        isPaid.value ? Colors.green : ColorsTheme.myLightOrange,
-                    width: 2,
+    return FutureBuilder<Response<Parking?>>(
+      future: ApiServices.getParkir(userID!),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(
+              leading: BackButton(
+                color: ColorsTheme.myDarkBlue,
+              ),
+              backgroundColor: Colors.white,
+              elevation: 0,
+              title: const Text(
+                "Mohon Tunggu",
+                style: TextStyle(
+                  color: Color(0xff06113D),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            body: LoadingScreen(),
+          );
+        } else {
+          if (!snapshot.hasData) {
+            return Scaffold(
+              backgroundColor: Colors.white,
+              appBar: AppBar(
+                leading: BackButton(
+                  color: ColorsTheme.myDarkBlue,
+                ),
+                backgroundColor: Colors.white,
+                elevation: 0,
+                title: const Text(
+                  "404 Error",
+                  style: TextStyle(
+                    color: Color(0xff06113D),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ),
+              body: Center(
+                child: Text("Terjadi Kesalahan"),
+              ),
+            );
+          } else {
+            var data = snapshot.data!.result!;
+            var kendaraan = data.kendaraan;
+            var tempat = data.tempat;
+            return Scaffold(
+              backgroundColor: Colors.white,
+              appBar: AppBar(
+                leading: BackButton(
+                  color: ColorsTheme.myDarkBlue,
+                ),
+                backgroundColor: Colors.white,
+                elevation: 0,
+                title: Text(
+                  "${data.status == "M" ? "BAYAR" : "KELUAR"} PARKIR",
+                  style: TextStyle(
+                    color: Color(0xff06113D),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "STATUS",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isPaid.value
-                            ? Colors.green
-                            : ColorsTheme.myLightOrange,
+                    //STATUS PEMBAYARAN
+                    Obx(
+                      () => Container(
+                        padding: EdgeInsets.all(16),
+                        width: double.maxFinite,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isPaid.value
+                                ? Colors.green
+                                : ColorsTheme.myLightOrange,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "STATUS",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isPaid.value
+                                    ? Colors.green
+                                    : ColorsTheme.myLightOrange,
+                              ),
+                            ),
+                            Text(
+                              isPaid.value
+                                  ? "Telah Dibayar"
+                                  : "Menunggu Pembayaran",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: isPaid.value
+                                    ? Colors.green
+                                    : ColorsTheme.myLightOrange,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Text(
-                      isPaid.value ? "Telah Dibayar" : "Menunggu Pembayaran",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: isPaid.value
-                            ? Colors.green
-                            : ColorsTheme.myLightOrange,
+
+                    //INFO PARKIR & Kendaraan
+                    Padding(
+                      padding: const EdgeInsets.only(top: 32),
+                      child: SubtitleText(text: "Info Parkir & Kendaraan"),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: EdgeInsets.all(16),
+                      width: double.maxFinite,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: ColorsTheme.myDarkBlue,
+                          width: 2,
+                        ),
+                        color: Colors.white,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          //NAMA TEMPAT PARKIR
+                          Center(
+                            child: Text(
+                              "${tempat.nama} ${tempat.kota}".toUpperCase(),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: ColorsTheme.myDarkBlue,
+                              ),
+                            ),
+                          ),
+                          Divider(
+                            thickness: 2,
+                            height: 36,
+                            color: ColorsTheme.myLightOrange,
+                          ),
+                          infoField(
+                            title: "Tanggal Masuk",
+                            info: Formater.date(data.waktuMasuk),
+                          ),
+                          infoField(
+                            title: "Waktu Masuk",
+                            info: "${Formater.time(data.waktuMasuk)} WIB",
+                          ),
+                          infoField(
+                            title: "Kendaraan",
+                            info: "${kendaraan.merek} ${kendaraan.model}",
+                          ),
+                          infoField(
+                            title: "Plat Nomor",
+                            info: kendaraan.noPolisi!,
+                          ),
+                          infoField(
+                            title: "Tipe Kendaraan",
+                            info: kendaraan.jenis == "B" ? "Mobil" : "Motor",
+                          ),
+                        ],
                       ),
                     ),
+
+                    //INFO TAGIHAN
+                    Padding(
+                      padding: const EdgeInsets.only(top: 32),
+                      child: SubtitleText(text: "Tagihan"),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: EdgeInsets.all(16),
+                      width: double.maxFinite,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: ColorsTheme.myDarkBlue,
+                          width: 2,
+                        ),
+                        color: Colors.white,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          infoField(
+                            title: "Tarif Parkir",
+                            info:
+                                "Rp ${kendaraan.jenis == "B" ? tempat.tarifMobil : tempat.tarifMotor}/Jam",
+                          ),
+                          infoField(
+                            title: "Durasi Parkir",
+                            info: Formater.timeDifference(data.waktuMasuk),
+                          ),
+
+                          Divider(thickness: 2, height: 44),
+
+                          //TOTAL BIAYA PARKIR
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Total Biaya Parkir",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorsTheme.myDarkBlue,
+                                ),
+                              ),
+                              Text(
+                                parkingCost(
+                                  cost: kendaraan.jenis == 'B'
+                                      ? tempat.tarifMobil
+                                      : tempat.tarifMotor,
+                                  duration:
+                                      Formater.timeDiffInHours(data.waktuMasuk),
+                                ),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorsTheme.myDarkBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 120),
                   ],
                 ),
               ),
-            ),
-
-            //INFO AKTIVITAS PARKIR
-            Padding(
-              padding: const EdgeInsets.only(top: 32, bottom: 16),
-              child: SubtitleText(text: "Info Parkir"),
-            ),
-            CardParkingActivity(),
-
-            //INFO TAGIHAN
-            Padding(
-              padding: const EdgeInsets.only(top: 32),
-              child: SubtitleText(text: "Tagihan"),
-            ),
-
-            //WIDGET TAGIHAN
-            Container(
-              margin: const EdgeInsets.only(top: 16),
-              padding: EdgeInsets.all(16),
-              width: double.maxFinite,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: ColorsTheme.myDarkBlue,
-                  width: 2,
-                ),
-                color: Colors.white,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Tarif Parkir",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: ColorsTheme.myDarkBlue,
+              floatingActionButton: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Obx(
+                  () => ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: ColorsTheme.myLightOrange,
+                      shape: StadiumBorder(),
+                      minimumSize: Size(double.maxFinite, 50),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        isLoading.value
+                            ? Container(
+                                margin: const EdgeInsets.only(right: 16),
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: ColorsTheme.myDarkBlue,
+                                ),
+                              )
+                            : SizedBox(),
+                        Text(
+                          buttonState(
+                            isPaid.value,
+                            isLoading.value,
+                          ), //isPaid.value ? "KELUAR PARKIR" : "BAYAR",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: ColorsTheme.myDarkBlue,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "Rp 4.000/jam",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: ColorsTheme.myDarkBlue,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Durasi Parkir",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: ColorsTheme.myDarkBlue,
-                        ),
-                      ),
-                      Text(
-                        "5 jam",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: ColorsTheme.myDarkBlue,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(thickness: 2, height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Total Biaya Parkir",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: ColorsTheme.myDarkBlue,
-                        ),
-                      ),
-                      Text(
-                        "Rp 20.000",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: ColorsTheme.myDarkBlue,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Obx(
-          () => ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              primary: ColorsTheme.myLightOrange,
-              shape: StadiumBorder(),
-              minimumSize: Size(double.maxFinite, 50),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                isLoading.value
-                    ? Container(
-                        margin: const EdgeInsets.only(right: 16),
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: ColorsTheme.myDarkBlue,
-                        ),
-                      )
-                    : SizedBox(),
-                Text(
-                  buttonState(
-                    isPaid.value,
-                    isLoading.value,
-                  ), //isPaid.value ? "KELUAR PARKIR" : "BAYAR",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: ColorsTheme.myDarkBlue,
+                      ],
+                    ),
+                    onPressed: () async {
+                      if (!isPaid.value) {
+                        isLoading.value = !isLoading.value;
+                        await Future.delayed(Duration(seconds: 2));
+                        isLoading.value = !isLoading.value;
+                        isPaid.value = !isPaid.value;
+                      }
+                      //showErrorMessage(context);
+                      isPaid.value
+                          ? showExitQRCode(context, data.id)
+                          : showErrorMessage(context);
+                    },
                   ),
                 ),
-              ],
+              ),
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerDocked,
+            );
+          }
+        }
+      },
+    );
+  }
+
+  String parkingCost({required String cost, required String duration}) {
+    var parkingCost = int.parse(cost) * int.parse(duration);
+    return "Rp ${Formater.toIDR(parkingCost.toString())}";
+  }
+
+  Padding infoField({required String title, required String info}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "$title:",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: ColorsTheme.myDarkBlue,
             ),
-            onPressed: () async {
-              if (!isPaid.value) {
-                isLoading.value = !isLoading.value;
-                await Future.delayed(Duration(seconds: 2));
-                isLoading.value = !isLoading.value;
-                isPaid.value = !isPaid.value;
-              }
-              //showErrorMessage(context);
-              isPaid.value
-                  ? showExitQRCode(context)
-                  : showErrorMessage(context);
-            },
           ),
-        ),
+          Text(
+            info,
+            style: TextStyle(
+              fontSize: 15,
+              color: ColorsTheme.myDarkBlue,
+            ),
+          ),
+        ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -286,7 +416,7 @@ class ExitPage extends StatelessWidget {
     );
   }
 
-  Future<dynamic> showExitQRCode(BuildContext context) {
+  Future<dynamic> showExitQRCode(BuildContext context, String idParkir) {
     return showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -319,7 +449,7 @@ class ExitPage extends StatelessWidget {
                     Container(
                       margin: EdgeInsets.symmetric(vertical: 32),
                       child: QrImage(
-                        data: "HELLO WORLD",
+                        data: idParkir,
                         size: 200,
                       ),
                     ),

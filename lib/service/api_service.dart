@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:simple_parking_app/model/parking.dart';
 import 'package:simple_parking_app/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_parking_app/model/vehicle.dart';
@@ -152,24 +153,22 @@ abstract class ApiServices {
     }
   }
 
-  static Future<GetVehicleResponse> getAllVehicle(
-      {required String userID}) async {
+  static Future<Response<List<Vehicle>?>> getAllVehicle(String userID) async {
     try {
       final response = await http.get(
         Uri.parse('${Api.showAllVehicle}?id_user=$userID'),
       );
       if (response.statusCode == 200) {
         var responseData = json.decode(response.body);
-        var vehicleData = responseData['result'];
-        if (vehicleData != null) {
-          return GetVehicleResponse.fromJson(responseData);
-        } else {
-          return GetVehicleResponse(
-            error: responseData['error'],
-            message: responseData['message'],
-            result: [],
-          );
-        }
+        return Response(
+          error: responseData['error'],
+          message: responseData['message'],
+          result: List<Vehicle>.from(
+            responseData["result"].map(
+              (e) => Vehicle.fromJson(e),
+            ),
+          ),
+        );
       } else {
         throw Exception('404 not found');
       }
@@ -189,6 +188,26 @@ abstract class ApiServices {
           error: responseData['error'],
           message: responseData['message'],
           result: User.fromJson(responseData['result']),
+        );
+      } else {
+        throw Exception('404 not found');
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  static Future<Response<Parking?>> getParkir(String userID) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${Api.getParkir}?id_user=$userID'),
+      );
+      if (response.statusCode == 200) {
+        var responseData = json.decode(response.body);
+        return Response(
+          error: responseData['error'],
+          message: responseData['message'],
+          result: Parking.fromJson(responseData["result"]),
         );
       } else {
         throw Exception('404 not found');

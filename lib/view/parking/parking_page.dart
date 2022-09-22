@@ -141,7 +141,7 @@ class ParkingPage extends StatelessWidget {
                   ),
                   itemBuilder: (context, item, isSelected) {
                     return ListTile(
-                      title: Text(item.model),
+                      title: Text(item.model!),
                       subtitle: Text(
                         "${item.noPolisi} • ${item.jenis == 'B' ? "Mobil" : "Sepeda Motor"} • ${item.warna}",
                         style: TextStyle(height: 2),
@@ -181,12 +181,12 @@ class ParkingPage extends StatelessWidget {
                   loadingBuilder: (context, _) => LoadingScreen(),
                 ),
                 asyncItems: (text) async {
-                  return await ApiServices.getAllVehicle(userID: userID!).then(
+                  return await ApiServices.getAllVehicle(userID!).then(
                     (value) {
-                      if (value.result.isEmpty) {
+                      if (value.result!.isEmpty) {
                         return [];
                       } else {
-                        return value.result;
+                        return value.result!;
                       }
                     },
                   );

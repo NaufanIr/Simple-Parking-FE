@@ -18,5 +18,5 @@ List<GetPage> _routePages = [
     GetPage(name: '${TopUpPage.TAG}/:userID', page: () => TopUpPage()),
     GetPage(name: '${AddVehiclePage.TAG}/:userID', page: () => AddVehiclePage()),
     GetPage(name: '${ParkingPage.TAG}/:userID', page: () => ParkingPage()),
-    GetPage(name: ExitPage.TAG, page: () => ExitPage()),
+    GetPage(name: '${ExitPage.TAG}/:userID', page: () => ExitPage()),
 ];

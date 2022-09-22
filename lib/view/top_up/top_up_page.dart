@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:simple_parking_app/main.dart';
 import 'package:simple_parking_app/service/api_service.dart';
 import 'package:simple_parking_app/utils/colors_theme.dart';
-import 'package:simple_parking_app/utils/number_formater.dart';
+import 'package:simple_parking_app/utils/formater.dart';
 import 'package:simple_parking_app/utils/widgets/text_widgets.dart';
 
 class TopUpPage extends StatefulWidget {
@@ -108,7 +108,7 @@ class _TopUpPageState extends State<TopUpPage> {
                   border: InputBorder.none,
                 ),
                 onChanged: (val) {
-                  val = NumberFormater.toIDR(val.replaceAll('.', ''));
+                  val = Formater.toIDR(val.replaceAll('.', ''));
                   _tfNominal.value = TextEditingValue(
                     text: val,
                     selection: TextSelection.collapsed(offset: val.length),

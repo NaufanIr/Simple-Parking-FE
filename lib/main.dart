@@ -3,17 +3,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:simple_parking_app/utils/colors_theme.dart';
-import 'package:simple_parking_app/utils/data_pref.dart';
 import 'package:simple_parking_app/utils/router.dart';
-import 'package:simple_parking_app/utils/widgets/loading_screen.dart';
-import 'package:simple_parking_app/view/auth/login_page.dart';
 import 'package:simple_parking_app/view/home/home_page.dart';
 import 'package:simple_parking_app/view/parking/parking_page.dart';
 import 'package:simple_parking_app/view/profile/profile_page.dart';
 import 'package:simple_parking_app/view/splash_screen.dart';
 
-void main() {
+Future<void> main() async {
   SystemChrome.setPreferredOrientations(
     [DeviceOrientation.portraitUp],
   );
@@ -22,7 +20,10 @@ void main() {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark),
   );
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null).then(
+    (_) => runApp(const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
